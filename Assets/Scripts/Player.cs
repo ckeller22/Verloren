@@ -11,12 +11,24 @@ public class Player : MonoBehaviour
     public float moveSpeed = 10f;
     public Vector2 direction;
     private bool isFacingRight = true;
-    
 
     [Header("Vertical Movement")]
     public float jumpSpeed = 15f;
     public float jumpDelay = 0.25f;
     private float jumpTimer;
+
+    [Header("Gripping")]
+    public bool isGripping;
+    public bool isClimbing;
+
+    [Header("Wall Sliding")]
+    public bool isWallSliding;
+    public float wallSlideSpeed;
+
+    [Header("Wall Sliding")]
+    public float wallJumpForce = 18f;
+    public float wallJumpDirection = -1f;
+    public Vector2 wallJumpAngle;
 
     [Header("Components")]
     public Rigidbody2D rigidBody2D;
@@ -29,6 +41,7 @@ public class Player : MonoBehaviour
 
     [Header("Collision")]
     public bool isGrounded;
+    public bool isTouchingWall;
     public LayerMask groundMask;
     
 
@@ -41,17 +54,17 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Ground dectection, draws an invisible box at base of player, checks for ground overlap, and sets isGrounded to true if overlap is found.
-        isGrounded = Physics2D.OverlapBox(new Vector2(gameObject.transform.position.x, gameObject.transform.position.y - 0.5f), new Vector2(0.9f, 0.4f), 0f, groundMask);
-        
-        if(Input.GetButtonDown("Jump") && isGrounded)
+        DetectCollisions();
+
+
+        // Allows for non frame perfect jumping.
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
             jumpTimer = Time.time + jumpDelay;
             
         }
 
-        direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-    
+        GetPlayerMovement();
     }
 
     void FixedUpdate()
@@ -64,6 +77,8 @@ public class Player : MonoBehaviour
             Jump();
         }
 
+        WallSlide();
+
         ModifyPhysics();
     }
 
@@ -71,6 +86,7 @@ public class Player : MonoBehaviour
     {
         bool isChangingDirection = (direction.x > 0 && rigidBody2D.velocity.x < 0) || (direction.x < 0 && rigidBody2D.velocity.x > 0);
 
+        #region Ground Physics
         if (isGrounded)
         {
             if (Mathf.Abs(direction.x) < 0.4f || isChangingDirection)
@@ -83,6 +99,8 @@ public class Player : MonoBehaviour
             }
             rigidBody2D.gravityScale = 0;
         }
+        #endregion
+        #region In-Air Physics
         else
         {
             rigidBody2D.gravityScale = gravity;
@@ -96,6 +114,8 @@ public class Player : MonoBehaviour
             }
             
         }
+        #endregion
+        
     }
 
     public void MoveCharacter(float horizontal)
@@ -115,7 +135,8 @@ public class Player : MonoBehaviour
     {
         CreateDust();
         isFacingRight = !isFacingRight;
-        //transform.rotation = Quaternion.Euler(0, isFacingRight ? 0 : 180, 0);
+        wallJumpDirection *= -1;
+        transform.Rotate(0, isFacingRight ? 0 : 180, 0);
     }
     public void Jump()
     {
@@ -128,5 +149,34 @@ public class Player : MonoBehaviour
     public void CreateDust()
     {
         dust.Play();
+    }
+
+    public void GetPlayerMovement()
+    {
+        direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+    }
+
+    public void DetectCollisions()
+    {
+        // Ground dectection, draws an invisible box at base of player, checks for ground overlap, and sets isGrounded to true if overlap is found.
+        isGrounded = Physics2D.OverlapBox(new Vector2(gameObject.transform.position.x, gameObject.transform.position.y - 0.5f), new Vector2(0.9f, 0.4f), 0f, groundMask);
+        isTouchingWall = Physics2D.OverlapBox(new Vector2(isFacingRight ? gameObject.transform.position.x + 0.1f : gameObject.transform.position.x - 0.1f, gameObject.transform.position.y), new Vector2(0.9f, 0.4f), 0f, groundMask);
+    }
+
+    public void WallSlide()
+    {
+        if (isTouchingWall && !isGrounded && rigidBody2D.velocity.y < 0)
+        {
+            isWallSliding = true;
+        }
+        else
+        {
+            isWallSliding = false;
+        }
+
+        if (isWallSliding)
+        {
+            rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, wallSlideSpeed);
+        }
     }
 }
