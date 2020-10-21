@@ -25,10 +25,11 @@ public class Player : MonoBehaviour
     public bool isWallSliding;
     public float wallSlideSpeed;
 
-    [Header("Wall Sliding")]
+    [Header("Wall Jumping")]
     public float wallJumpForce = 18f;
     public float wallJumpDirection = -1f;
     public Vector2 wallJumpAngle;
+    public bool canJump;
 
     [Header("Components")]
     public Rigidbody2D rigidBody2D;
@@ -49,6 +50,7 @@ public class Player : MonoBehaviour
     void Start()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
+        wallJumpAngle.Normalize();
     }
 
     // Update is called once per frame
@@ -78,7 +80,8 @@ public class Player : MonoBehaviour
         }
 
         WallSlide();
-
+        WallClimbing();
+        WallJump();
         ModifyPhysics();
     }
 
@@ -133,14 +136,23 @@ public class Player : MonoBehaviour
 
     public void Flip()
     {
-        CreateDust();
-        isFacingRight = !isFacingRight;
-        wallJumpDirection *= -1;
-        transform.Rotate(0, isFacingRight ? 0 : 180, 0);
+        if (!isWallSliding)
+        {
+            if (isGrounded)
+            {
+                CreateDust();
+            }
+
+            isFacingRight = !isFacingRight;
+            wallJumpDirection *= -1;
+            transform.Rotate(0, isFacingRight ? 0 : 180, 0);
+        }
+        
     }
     public void Jump()
     {
         CreateDust();
+        canJump = true;
         rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, 0);
         rigidBody2D.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
         jumpTimer = 0;
@@ -165,7 +177,7 @@ public class Player : MonoBehaviour
 
     public void WallSlide()
     {
-        if (isTouchingWall && !isGrounded && rigidBody2D.velocity.y < 0)
+        if (isTouchingWall && !isGrounded && rigidBody2D.velocity.y < 0 && !isClimbing)
         {
             isWallSliding = true;
         }
@@ -177,6 +189,34 @@ public class Player : MonoBehaviour
         if (isWallSliding)
         {
             rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, wallSlideSpeed);
+        }
+    }
+
+    public void WallJump()
+    {
+        if ((isWallSliding || isTouchingWall) && Input.GetButtonDown("Jump"))
+        {
+            rigidBody2D.AddForce(new Vector2(wallJumpForce * wallJumpAngle.x, wallJumpForce * wallJumpAngle.y), ForceMode2D.Impulse);
+            canJump = false;
+        }
+    }
+
+    public void WallClimbing()
+    {
+        if (Input.GetButton("Fire2") && isTouchingWall)
+        {
+            isClimbing = true;
+        } 
+        else
+        {
+            isClimbing = false;
+        }
+        if (isClimbing)
+        {
+            rigidBody2D.gravityScale = 0f;
+            rigidBody2D.velocity = Vector2.zero;
+            
+
         }
     }
 }

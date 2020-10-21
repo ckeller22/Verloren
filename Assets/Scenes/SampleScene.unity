@@ -5731,7 +5731,8 @@ MonoBehaviour:
   wallSlideSpeed: -3
   wallJumpForce: 18
   wallJumpDirection: -1
-  wallJumpAngle: {x: 0, y: 0}
+  wallJumpAngle: {x: 1, y: 3}
+  canJump: 0
   rigidBody2D: {fileID: 0}
   maxSpeed: 7
   linearDrag: 4
