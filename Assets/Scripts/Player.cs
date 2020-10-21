@@ -11,10 +11,12 @@ public class Player : MonoBehaviour
     public float moveSpeed = 10f;
     public Vector2 direction;
     private bool isFacingRight = true;
+    public float airMoveSpeed;
 
     [Header("Vertical Movement")]
     public float jumpSpeed = 15f;
     public float jumpDelay = 0.25f;
+    public float jumpForce = 10f;
     private float jumpTimer;
 
     [Header("Gripping")]
@@ -32,7 +34,7 @@ public class Player : MonoBehaviour
     public bool canJump;
 
     [Header("Components")]
-    public Rigidbody2D rigidBody2D;
+    public Rigidbody2D rb;
 
     [Header("Physics")]
     public float maxSpeed = 7f;
@@ -41,23 +43,31 @@ public class Player : MonoBehaviour
     public float fallMultiplier = 5f;
 
     [Header("Collision")]
-    public bool isGrounded;
+    public bool isGrounded = true;
     public bool isTouchingWall;
     public LayerMask groundMask;
+    public Transform groundCheckPoint;
+    public Vector2 groundCheckSize;
+    public Transform wallCheckPoint;
+    public Vector2 wallCheckSize;
+
+    [Header("Input Intents")]
+    public bool jumpIntent;
     
 
     // Start is called before the first frame update
     void Start()
     {
-        rigidBody2D = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
         wallJumpAngle.Normalize();
     }
 
     // Update is called once per frame
     void Update()
     {
+        GetPlayerMovement();
         DetectCollisions();
-
+        
 
         // Allows for non frame perfect jumping.
         if (Input.GetButtonDown("Jump") && isGrounded)
@@ -66,72 +76,94 @@ public class Player : MonoBehaviour
             
         }
 
-        GetPlayerMovement();
+        
     }
 
     void FixedUpdate()
     {
-        
-        MoveCharacter(direction.x);
+
+        MoveCharacter();
         
         if(jumpTimer > Time.time && isGrounded)
         {
-            Jump();
+            Jump();         
         }
 
-        WallSlide();
-        WallClimbing();
-        WallJump();
-        ModifyPhysics();
+        //WallSlide();
+        //WallClimbing();
+        //WallJump();
+        //ModifyPhysics();
     }
 
     public void ModifyPhysics()
     {
-        bool isChangingDirection = (direction.x > 0 && rigidBody2D.velocity.x < 0) || (direction.x < 0 && rigidBody2D.velocity.x > 0);
+        bool isChangingDirection = (direction.x > 0 && rb.velocity.x < 0) || (direction.x < 0 && rb.velocity.x > 0);
 
         #region Ground Physics
         if (isGrounded)
         {
             if (Mathf.Abs(direction.x) < 0.4f || isChangingDirection)
             {
-                rigidBody2D.drag = linearDrag;
+                rb.drag = linearDrag;
             }
             else
             {
-                rigidBody2D.drag = 0f;
+                rb.drag = 0f;
             }
-            rigidBody2D.gravityScale = 0;
+            rb.gravityScale = 0;
         }
         #endregion
         #region In-Air Physics
         else
         {
-            rigidBody2D.gravityScale = gravity;
-            rigidBody2D.drag = linearDrag * 0.15f;
-            if (rigidBody2D.velocity.y < 0)
-            {
-                rigidBody2D.gravityScale = gravity * fallMultiplier;
-            }
-            else if(rigidBody2D.velocity.y > 0 && !Input.GetButton("Jump")) {
-                rigidBody2D.gravityScale = gravity * (fallMultiplier / 2);
-            }
             
+            rb.gravityScale = gravity;
+            rb.drag = linearDrag * 0.15f;
+            if (rb.velocity.y < 0)
+            {
+                rb.gravityScale = gravity * fallMultiplier;
+            }
+            else if (rb.velocity.y > 0 && !Input.GetButton("Jump"))
+            {
+                rb.gravityScale = gravity * (fallMultiplier / 2);
+            }
+
         }
         #endregion
         
     }
 
-    public void MoveCharacter(float horizontal)
+    public void MoveCharacter()
     {
-        rigidBody2D.AddForce(Vector2.right * horizontal * moveSpeed);
-        if(Mathf.Abs(rigidBody2D.velocity.x) > maxSpeed)
+        /*if (isGrounded)
         {
-            rigidBody2D.velocity = new Vector2(Mathf.Sign(rigidBody2D.velocity.x) * maxSpeed, rigidBody2D.velocity.y);
-        }
+            rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+            if (Mathf.Abs(rb.velocity.x) > maxSpeed)
+            {
+                rb.velocity = new Vector2(Mathf.Sign(rb.velocity.x) * maxSpeed, rb.velocity.y);
+            }
+        } else if (!isGrounded && !isWallSliding && direction.x != 0f)
+        {
+            rb.AddForce(new Vector2(airMoveSpeed * direction.x, 0));
+             if (Mathf.Abs(rb.velocity.x) > moveSpeed)
+                {
+                rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+                }
+        }*/
 
-        if ((horizontal > 0 && !isFacingRight) || ( horizontal < 0 && isFacingRight)) {
+        // Ground movement
+        rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+        
+
+        if (direction.x < 0 && isFacingRight)
+        {
+            Flip();
+        } else if (direction.x > 0 && !isFacingRight)
+        {
             Flip();
         }
+        
+
     }
 
     public void Flip()
@@ -145,16 +177,18 @@ public class Player : MonoBehaviour
 
             isFacingRight = !isFacingRight;
             wallJumpDirection *= -1;
-            transform.Rotate(0, isFacingRight ? 0 : 180, 0);
+            transform.Rotate(0, 180, 0);
         }
         
     }
     public void Jump()
     {
-        CreateDust();
-        canJump = true;
-        rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, 0);
-        rigidBody2D.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
+        if (isGrounded)
+        {
+            CreateDust();
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.velocity += Vector2.up * jumpForce;
+        }
         jumpTimer = 0;
     }
 
@@ -171,13 +205,13 @@ public class Player : MonoBehaviour
     public void DetectCollisions()
     {
         // Ground dectection, draws an invisible box at base of player, checks for ground overlap, and sets isGrounded to true if overlap is found.
-        isGrounded = Physics2D.OverlapBox(new Vector2(gameObject.transform.position.x, gameObject.transform.position.y - 0.5f), new Vector2(0.9f, 0.4f), 0f, groundMask);
-        isTouchingWall = Physics2D.OverlapBox(new Vector2(isFacingRight ? gameObject.transform.position.x + 0.1f : gameObject.transform.position.x - 0.1f, gameObject.transform.position.y), new Vector2(0.9f, 0.4f), 0f, groundMask);
+        isGrounded = Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0, groundMask);
+        isTouchingWall = Physics2D.OverlapBox(wallCheckPoint.position, wallCheckSize, 0, groundMask);
     }
 
     public void WallSlide()
     {
-        if (isTouchingWall && !isGrounded && rigidBody2D.velocity.y < 0 && !isClimbing)
+        if (isTouchingWall && !isGrounded && rb.velocity.y < 0 && !isClimbing)
         {
             isWallSliding = true;
         }
@@ -188,7 +222,7 @@ public class Player : MonoBehaviour
 
         if (isWallSliding)
         {
-            rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, wallSlideSpeed);
+            rb.velocity = new Vector2(rb.velocity.x, wallSlideSpeed);
         }
     }
 
@@ -196,7 +230,7 @@ public class Player : MonoBehaviour
     {
         if ((isWallSliding || isTouchingWall) && Input.GetButtonDown("Jump"))
         {
-            rigidBody2D.AddForce(new Vector2(wallJumpForce * wallJumpAngle.x, wallJumpForce * wallJumpAngle.y), ForceMode2D.Impulse);
+            rb.AddForce(new Vector2(wallJumpForce * wallJumpAngle.x, wallJumpForce * wallJumpAngle.y), ForceMode2D.Impulse);
             canJump = false;
         }
     }
@@ -213,10 +247,20 @@ public class Player : MonoBehaviour
         }
         if (isClimbing)
         {
-            rigidBody2D.gravityScale = 0f;
-            rigidBody2D.velocity = Vector2.zero;
+            rb.gravityScale = 0f;
+            rb.velocity = Vector2.zero;
             
 
         }
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawCube(groundCheckPoint.position, groundCheckSize);
+        Gizmos.color = Color.red;
+        Gizmos.DrawCube(wallCheckPoint.position, wallCheckSize);
+       
+    }
+
 }
