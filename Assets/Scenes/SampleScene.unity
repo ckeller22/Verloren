@@ -5762,12 +5762,14 @@ MonoBehaviour:
   jumpForce: 10
   isGripping: 0
   isClimbing: 0
+  isPushingWall: 0
   isWallSliding: 0
   wallSlideSpeed: -3
   wallJumpForce: 18
   wallJumpDirection: -1
   wallJumpAngle: {x: 1, y: 3}
   canJump: 0
+  climbSpeed: 5
   rb: {fileID: 0}
   maxSpeed: 7
   linearDrag: 4
@@ -5779,10 +5781,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   groundCheckPoint: {fileID: 1225586971}
-  groundCheckSize: {x: 1, y: 0.2}
+  groundCheckSize: {x: 0.8, y: 0.2}
   wallCheckPoint: {fileID: 1765553777}
   wallCheckSize: {x: 0.1, y: 0.1}
   jumpIntent: 0
+  grabIntent: 0
 --- !u!114 &1501503501
 MonoBehaviour:
   m_ObjectHideFlags: 0
