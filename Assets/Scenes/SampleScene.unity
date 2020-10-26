@@ -5773,6 +5773,7 @@ MonoBehaviour:
   wallSlideSpeed: -3
   wallJumpForce: 18
   wallJumpDirection: -1
+  wallJumpLerp: 10
   wallJumpVector: {x: 0, y: 0}
   wallJumpAngle: {x: 1, y: 3}
   canJump: 0
@@ -5784,6 +5785,7 @@ MonoBehaviour:
   linearDrag: 4
   gravity: 1
   fallMultiplier: 5
+  canMove: 1
   jumpIntent: 0
   grabIntent: 0
   x: 0

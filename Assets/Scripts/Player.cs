@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
     [Header("Vertical Movement")]
     public float jumpSpeed = 15f;
     public float jumpDelay = 0.25f;
-    public float jumpForce = 10f;
+    public float jumpForce = 50f;
     public float jumpTimer;
 
     [Header("Gripping")]
@@ -35,6 +35,7 @@ public class Player : MonoBehaviour
     [Header("Wall Jumping")]
     public float wallJumpForce = 18f;
     public float wallJumpDirection = -1f;
+    public float wallJumpLerp = 10f;
     public Vector2 wallJumpVector;
     public Vector2 wallJumpAngle;
     public bool canJump;
@@ -52,6 +53,7 @@ public class Player : MonoBehaviour
     public float linearDrag = 4f;
     public float gravity = 1f;
     public float fallMultiplier = 5f;
+    public bool canMove;
 
     [Header("Collision")]
     
@@ -100,6 +102,10 @@ public class Player : MonoBehaviour
 
         MoveCharacter();
 
+        if (coll.isOnGround)
+        {
+            hasWallJumped = false;
+        }
         
         // Handles Jump
         if (jumpTimer > Time.time && coll.isOnGround)
@@ -108,6 +114,7 @@ public class Player : MonoBehaviour
 
         }
         
+        // Handles walljump
         if (coll.isTouchingWall)
         {
             if (jumpTimer > Time.time)
@@ -123,8 +130,8 @@ public class Player : MonoBehaviour
 
        
 
-        //WallClimb();
-        //WallSlide();
+        WallClimb();
+        WallSlide();
 
 
 
@@ -186,10 +193,26 @@ public class Player : MonoBehaviour
         }*/
 
         // Ground movement
+        if (!canMove)
+        {
+            return;
+        }
         
-        if (coll.isOnGround)
+        if (coll.isTouchingWall)
+        {
+            if ((coll.isOnRightWall && direction.x > 0) || (coll.isOnLeftWall && direction.x < 0))
+            {
+                return;
+            }
+
+        }
+        if (!hasWallJumped)
         {
             rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+        }
+        else
+        {
+            rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(direction.x * moveSpeed, rb.velocity.y)), wallJumpLerp * Time.deltaTime);
         }
         
 
@@ -275,7 +298,10 @@ public class Player : MonoBehaviour
 
     public void WallJump()
     {
-        
+
+        StopCoroutine(DisableMovement(0));
+        StartCoroutine(DisableMovement(.1f));
+
         if (coll.isOnRightWall)
         {
             wallJumpVector = Vector2.left;
@@ -284,6 +310,8 @@ public class Player : MonoBehaviour
         {
             wallJumpVector = Vector2.right;
         }
+
+
 
         rb.velocity = Vector2.zero;
         rb.velocity = (Vector2.up / 1.5f + wallJumpVector / 1.5f) * jumpForce;
@@ -316,6 +344,13 @@ public class Player : MonoBehaviour
         }   
     }
 
-    
+    IEnumerator DisableMovement(float time)
+    {
+        canMove = false;
+        yield return new WaitForSeconds(time);
+        canMove = true;
+    }
+
+
 
 }
