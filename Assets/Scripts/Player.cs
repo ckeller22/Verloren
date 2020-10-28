@@ -1,183 +1,287 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.Profiling.Memory.Experimental;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
     public ParticleSystem dust;
+    private Collision coll;
 
     [Header("Horizontal Movement")]
     public float moveSpeed = 10f;
     public Vector2 direction;
     private bool isFacingRight = true;
+    public float airMoveSpeed;
 
     [Header("Vertical Movement")]
     public float jumpSpeed = 15f;
     public float jumpDelay = 0.25f;
-    private float jumpTimer;
+    public float jumpForce = 50f;
+    public float jumpTimer;
 
     [Header("Gripping")]
     public bool isGripping;
     public bool isClimbing;
 
     [Header("Wall Sliding")]
+    public bool isPushingWall;
     public bool isWallSliding;
     public float wallSlideSpeed;
 
     [Header("Wall Jumping")]
     public float wallJumpForce = 18f;
     public float wallJumpDirection = -1f;
+    public float wallJumpLerp = 10f;
+    public Vector2 wallJumpVector;
     public Vector2 wallJumpAngle;
     public bool canJump;
+    public bool isWallJumping;
+    public bool hasWallJumped;
+
+    [Header("Wall Climbing")]
+    public float climbSpeed;
 
     [Header("Components")]
-    public Rigidbody2D rigidBody2D;
+    public Rigidbody2D rb;
 
     [Header("Physics")]
     public float maxSpeed = 7f;
     public float linearDrag = 4f;
     public float gravity = 1f;
     public float fallMultiplier = 5f;
+    public bool canMove;
 
     [Header("Collision")]
-    public bool isGrounded;
-    public bool isTouchingWall;
-    public LayerMask groundMask;
     
+
+    [Header("Input Intents")]
+    public bool jumpIntent;
+    public bool grabIntent;
+
+    [Header("Movement Input")]
+    public float x;
+    public float y;
+    public float xRaw;
+    public float yRaw;
+
+
 
     // Start is called before the first frame update
     void Start()
     {
-        rigidBody2D = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
+        coll = GetComponent<Collision>();
         wallJumpAngle.Normalize();
     }
+
 
     // Update is called once per frame
     void Update()
     {
-        DetectCollisions();
-
-
+        GetPlayerMovement();
+        
         // Allows for non frame perfect jumping.
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (Input.GetButtonDown("Jump"))
         {
             jumpTimer = Time.time + jumpDelay;
             
         }
 
-        GetPlayerMovement();
+        grabIntent = Input.GetButton("Fire1");
+        jumpIntent = Input.GetButton("Jump");
+
+
     }
 
     void FixedUpdate()
     {
+
+        MoveCharacter();
+
+        if (coll.isOnGround)
+        {
+            hasWallJumped = false;
+        }
         
-        MoveCharacter(direction.x);
-        
-        if(jumpTimer > Time.time && isGrounded)
+        // Handles Jump
+        if (jumpTimer > Time.time && coll.isOnGround)
         {
             Jump();
-        }
 
+        }
+        
+        // Handles walljump
+        if (coll.isTouchingWall)
+        {
+            if (jumpTimer > Time.time)
+            {
+                WallJump();
+                Debug.Log("Wall jump reached");
+            }
+        }
+        
+            
+        
+        
+
+       
+
+        WallClimb();
         WallSlide();
-        WallClimbing();
-        WallJump();
-        ModifyPhysics();
+
+
+
+        //WallJump();
+        //ModifyPhysics();
     }
 
     public void ModifyPhysics()
     {
-        bool isChangingDirection = (direction.x > 0 && rigidBody2D.velocity.x < 0) || (direction.x < 0 && rigidBody2D.velocity.x > 0);
+        bool isChangingDirection = (direction.x > 0 && rb.velocity.x < 0) || (direction.x < 0 && rb.velocity.x > 0);
 
         #region Ground Physics
-        if (isGrounded)
+        if (coll.isOnGround)
         {
             if (Mathf.Abs(direction.x) < 0.4f || isChangingDirection)
             {
-                rigidBody2D.drag = linearDrag;
+                rb.drag = linearDrag;
             }
             else
             {
-                rigidBody2D.drag = 0f;
+                rb.drag = 0f;
             }
-            rigidBody2D.gravityScale = 0;
+            rb.gravityScale = 0;
         }
         #endregion
         #region In-Air Physics
         else
         {
-            rigidBody2D.gravityScale = gravity;
-            rigidBody2D.drag = linearDrag * 0.15f;
-            if (rigidBody2D.velocity.y < 0)
-            {
-                rigidBody2D.gravityScale = gravity * fallMultiplier;
-            }
-            else if(rigidBody2D.velocity.y > 0 && !Input.GetButton("Jump")) {
-                rigidBody2D.gravityScale = gravity * (fallMultiplier / 2);
-            }
             
+            rb.gravityScale = gravity;
+            rb.drag = linearDrag * 0.15f;
+            if (rb.velocity.y < 0)
+            {
+                rb.gravityScale = gravity * fallMultiplier;
+            }
+            else if (rb.velocity.y > 0 && !Input.GetButton("Jump"))
+            {
+                rb.gravityScale = gravity * (fallMultiplier / 2);
+            }
+
         }
         #endregion
         
     }
 
-    public void MoveCharacter(float horizontal)
+    public void MoveCharacter()
     {
-        rigidBody2D.AddForce(Vector2.right * horizontal * moveSpeed);
-        if(Mathf.Abs(rigidBody2D.velocity.x) > maxSpeed)
+        /*if (isGrounded)
         {
-            rigidBody2D.velocity = new Vector2(Mathf.Sign(rigidBody2D.velocity.x) * maxSpeed, rigidBody2D.velocity.y);
-        }
+            rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+            
+        } else if (!isGrounded && !isWallSliding && direction.x != 0f)
+        {
+            rb.AddForce(new Vector2(airMoveSpeed * direction.x, 0));
+             if (Mathf.Abs(rb.velocity.x) > moveSpeed)
+                {
+                rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+                }
+        }*/
 
-        if ((horizontal > 0 && !isFacingRight) || ( horizontal < 0 && isFacingRight)) {
+        // Ground movement
+        if (!canMove)
+        {
+            return;
+        }
+        
+        if (coll.isTouchingWall)
+        {
+            if ((coll.isOnRightWall && direction.x > 0) || (coll.isOnLeftWall && direction.x < 0))
+            {
+                return;
+            }
+
+        }
+        if (!hasWallJumped)
+        {
+            rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+        }
+        else
+        {
+            rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(direction.x * moveSpeed, rb.velocity.y)), wallJumpLerp * Time.deltaTime);
+        }
+        
+
+
+
+
+
+
+
+        if (direction.x < 0 && isFacingRight)
+        {
+            Flip();
+        } else if (direction.x > 0 && !isFacingRight)
+        {
             Flip();
         }
+        
+
     }
 
     public void Flip()
     {
         if (!isWallSliding)
         {
-            if (isGrounded)
+            if (coll.isOnGround)
             {
                 CreateDust();
             }
 
             isFacingRight = !isFacingRight;
             wallJumpDirection *= -1;
-            transform.Rotate(0, isFacingRight ? 0 : 180, 0);
+            transform.Rotate(0, 180, 0);
         }
         
     }
     public void Jump()
-    {
-        CreateDust();
-        canJump = true;
-        rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, 0);
-        rigidBody2D.AddForce(Vector2.up * jumpSpeed, ForceMode2D.Impulse);
-        jumpTimer = 0;
+    {   
+            CreateDust();
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.velocity += Vector2.up * moveSpeed;
+            jumpTimer = 0;
+
     }
 
     public void CreateDust()
     {
         dust.Play();
     }
-
+     
     public void GetPlayerMovement()
     {
-        direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        x = Input.GetAxis("Horizontal");
+        y = Input.GetAxis("Vertical");
+        xRaw = Input.GetAxisRaw("Horizontal");
+        yRaw = Input.GetAxisRaw("Vertical");
+        direction = new Vector2(x, y);
     }
 
-    public void DetectCollisions()
-    {
-        // Ground dectection, draws an invisible box at base of player, checks for ground overlap, and sets isGrounded to true if overlap is found.
-        isGrounded = Physics2D.OverlapBox(new Vector2(gameObject.transform.position.x, gameObject.transform.position.y - 0.5f), new Vector2(0.9f, 0.4f), 0f, groundMask);
-        isTouchingWall = Physics2D.OverlapBox(new Vector2(isFacingRight ? gameObject.transform.position.x + 0.1f : gameObject.transform.position.x - 0.1f, gameObject.transform.position.y), new Vector2(0.9f, 0.4f), 0f, groundMask);
-    }
+    
 
     public void WallSlide()
     {
-        if (isTouchingWall && !isGrounded && rigidBody2D.velocity.y < 0 && !isClimbing)
+        isPushingWall = false;
+        if ((isFacingRight && coll.isTouchingWall && direction.x > 0) || (!isFacingRight && coll.isTouchingWall && direction.x < 0))
+        {
+            isPushingWall = true;
+        }
+
+        if (isPushingWall && !coll.isOnGround && rb.velocity.y < 0 && !isClimbing)
         {
             isWallSliding = true;
         }
@@ -188,35 +292,65 @@ public class Player : MonoBehaviour
 
         if (isWallSliding)
         {
-            rigidBody2D.velocity = new Vector2(rigidBody2D.velocity.x, wallSlideSpeed);
+            rb.velocity = new Vector2(rb.velocity.x, wallSlideSpeed);
         }
     }
 
     public void WallJump()
     {
-        if ((isWallSliding || isTouchingWall) && Input.GetButtonDown("Jump"))
+
+        StopCoroutine(DisableMovement(0));
+        StartCoroutine(DisableMovement(.1f));
+
+        if (coll.isOnRightWall)
         {
-            rigidBody2D.AddForce(new Vector2(wallJumpForce * wallJumpAngle.x, wallJumpForce * wallJumpAngle.y), ForceMode2D.Impulse);
-            canJump = false;
+            wallJumpVector = Vector2.left;
         }
+        else
+        {
+            wallJumpVector = Vector2.right;
+        }
+
+
+
+        rb.velocity = Vector2.zero;
+        rb.velocity = (Vector2.up / 1.5f + wallJumpVector / 1.5f) * jumpForce;
+        hasWallJumped = true;
+        jumpTimer = 0;
+        //rb.AddForce(new Vector2(wallJumpForce * wallJumpAngle.x * wallJumpDirection, wallJumpForce * wallJumpAngle.y), ForceMode2D.Impulse);
+            
     }
 
-    public void WallClimbing()
+    public void WallClimb()
     {
-        if (Input.GetButton("Fire2") && isTouchingWall)
+
+        if (grabIntent && coll.isTouchingWall && !coll.isOnGround)
         {
             isClimbing = true;
-        } 
+        }
         else
         {
             isClimbing = false;
         }
         if (isClimbing)
         {
-            rigidBody2D.gravityScale = 0f;
-            rigidBody2D.velocity = Vector2.zero;
-            
-
+            rb.gravityScale = 0f;
+            rb.velocity = new Vector2(0f, direction.y * climbSpeed);
         }
+        else
+        {
+            // Restores gravity after releasing grab button.
+            rb.gravityScale = gravity;
+        }   
     }
+
+    IEnumerator DisableMovement(float time)
+    {
+        canMove = false;
+        yield return new WaitForSeconds(time);
+        canMove = true;
+    }
+
+
+
 }
