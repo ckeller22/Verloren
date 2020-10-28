@@ -14,4 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 10
   jumpSpeed: 20
+  amountOfJumps: 1
   variableJumpHeightMultiplier: 0.5
+  wallSlideSpeed: 3
+  groundCheckRadius: 0.3
+  wallCheckDistance: 0.6
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 256

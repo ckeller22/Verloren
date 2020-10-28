@@ -23,9 +23,20 @@ public class Player : MonoBehaviour
     public Collision Collision { get; private set; }
     #endregion
 
+    #region Check Transforms
+
+    [SerializeField]
+    private Transform groundCheck;
+    [SerializeField]
+    private Transform wallCheck;
+
+    #endregion
+
     #region Other Variables
     [SerializeField]
     private PlayerData playerData;
+
+    public int FacingDirection { get; private set; }
     public Vector2 CurrentVelocity { get; private set; }
 
     private Vector2 workspace;
@@ -52,7 +63,9 @@ public class Player : MonoBehaviour
         RB = GetComponent<Rigidbody2D>();
         InputHandler = GetComponent<PlayerInputHandler>();
         Collision = GetComponent<Collision>();
-        
+
+        FacingDirection = 1;
+
         StateMachine.Initialize(IdleState);
     }
 
@@ -84,10 +97,34 @@ public class Player : MonoBehaviour
         CurrentVelocity = workspace;
     }
 
-    
+    #region Checks
 
     public bool CheckIfGrounded()
     {
-        return Collision.isGrounded;
+        return Physics2D.OverlapCircle(groundCheck.position, playerData.groundCheckRadius, playerData.whatIsGround);
+    }
+
+    
+
+    public bool CheckIfTouchingWall()
+    {
+        return Physics2D.Raycast(wallCheck.position, Vector2.right * FacingDirection, playerData.wallCheckDistance, playerData.whatIsGround);
+    }
+
+    public void CheckIfShouldFlip(int xInput)
+    {
+        if(xInput != 0 && xInput != FacingDirection)
+        {
+            Flip();
+        }
+    }
+
+    #endregion
+
+    private void Flip()
+    {
+        FacingDirection *= -1;
+        transform.Rotate(0.0f, 180.0f, 0.0f);
+        
     }
 }
