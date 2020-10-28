@@ -1,0 +1,54 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerGroundedState : PlayerState
+{
+    protected Vector2 input;
+    protected int xInput;
+
+    private bool jumpInput;
+    private bool isGrounded;
+
+    public PlayerGroundedState(Player player, PlayerData playerData, PlayerStateMachine playerStateMachine) : base(player, playerData, playerStateMachine)
+    {
+    }
+
+    public override void DoChecks()
+    {
+        base.DoChecks();
+
+        isGrounded = player.CheckIfGrounded();
+    }
+
+    public override void Enter()
+    {
+        base.Enter();
+
+        player.JumpState.ResetAmountOfJumpsLeft();
+    }
+
+    public override void Exit()
+    {
+        base.Exit();
+    }
+
+    public override void LogicUpdate()
+    {
+        base.LogicUpdate();
+        xInput = player.InputHandler.NormInputX;
+        jumpInput = player.InputHandler.JumpInput;
+
+        if (jumpInput && player.JumpState.CanJump())
+        {
+            player.InputHandler.UseJumpInput();
+            stateMachine.ChangeState(player.JumpState);
+            
+        }
+    }
+
+    public override void PhysicsUpdate()
+    {
+        base.PhysicsUpdate();
+    }
+}

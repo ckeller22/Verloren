@@ -5625,8 +5625,10 @@ GameObject:
   - component: {fileID: 1501503497}
   - component: {fileID: 1501503499}
   - component: {fileID: 1501503500}
-  - component: {fileID: 1501503501}
   - component: {fileID: 1501503502}
+  - component: {fileID: 1501503501}
+  - component: {fileID: 1501503503}
+  - component: {fileID: 1501503504}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -5664,8 +5666,8 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_GravityScale: 4
+  m_Material: {fileID: 6200000, guid: d96187fb89940f943bd74b1c8940baee, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 1
@@ -5755,43 +5757,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1501503495}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c16072a1fd92e9646800182fcf578293, type: 3}
+  m_Script: {fileID: 11500000, guid: 42300ae48fe63bb4cb04cfff504062e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dust: {fileID: 1230500250}
-  moveSpeed: 10
-  direction: {x: 0, y: 0}
-  airMoveSpeed: 30
-  jumpSpeed: 15
-  jumpDelay: 0.25
-  jumpForce: 10
-  jumpTimer: 0
-  isGripping: 0
-  isClimbing: 0
-  isPushingWall: 0
-  isWallSliding: 0
-  wallSlideSpeed: -3
-  wallJumpForce: 18
-  wallJumpDirection: -1
-  wallJumpLerp: 10
-  wallJumpVector: {x: 0, y: 0}
-  wallJumpAngle: {x: 1, y: 3}
-  canJump: 0
-  isWallJumping: 0
-  hasWallJumped: 0
-  climbSpeed: 5
-  rb: {fileID: 0}
-  maxSpeed: 7
-  linearDrag: 4
-  gravity: 1
-  fallMultiplier: 5
-  canMove: 1
-  jumpIntent: 0
-  grabIntent: 0
-  x: 0
-  y: 0
-  xRaw: 0
-  yRaw: 0
+  playerData: {fileID: 11400000, guid: 649677eca8eae6c43a01bfa3167b09a9, type: 2}
 --- !u!114 &1501503501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5801,11 +5770,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1501503495}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4ff030a6ba9f324fa8c61a091e1f086, type: 3}
+  m_Script: {fileID: 11500000, guid: 17e45ffdf64d54e4385ae8046da5cae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fallMultiplier: 2.5
-  lowJumpMultiplier: 2
+  inputHoldTime: 0.2
 --- !u!114 &1501503502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5815,10 +5783,71 @@ MonoBehaviour:
   m_GameObject: {fileID: 1501503495}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 937852c07cd8c354489328a4a6524c0e, type: 3}
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isOnGround: 1
+  m_Actions: {fileID: -944628639613478452, guid: 67673fce7f531c2488a495d059d9968b,
+    type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1501503501}
+        m_MethodName: OnMoveInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: d0802b66-094e-4f0b-8c92-e1342449850a
+    m_ActionName: Gameplay/Movement[/XInputControllerWindows/leftStick,/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1501503501}
+        m_MethodName: OnJumpInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 685098f1-0cb0-488d-87fa-c2730baddd7f
+    m_ActionName: Gameplay/Jump[/Keyboard/space,/XInputControllerWindows/buttonSouth]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Gameplay
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
+--- !u!114 &1501503503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501503495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 180a4316887a9a34db3aba030257c995, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isGrounded: 1
   isTouchingWall: 0
   isOnRightWall: 0
   isOnLeftWall: 0
@@ -5826,9 +5855,23 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   collisionRadius: 0.25
-  bottomOffset: {x: 0, y: -0.51}
-  rightOffset: {x: 0.52, y: 0}
-  leftOffset: {x: -0.52, y: 0}
+  bottomOffset: {x: 0, y: -0.48}
+  rightOffset: {x: 0.5, y: 0}
+  leftOffset: {x: -0.5, y: 0}
+--- !u!114 &1501503504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501503495}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e803700f4afb948be93a6e25d28488, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fallMultiplier: 2.5
+  lowJumpMultiplier: 2
 --- !u!1 &1730513988
 GameObject:
   m_ObjectHideFlags: 0
