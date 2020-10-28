@@ -14,4 +14,12 @@ public class PlayerData : ScriptableObject
 
     [Header("In Air State")]
     public float variableJumpHeightMultiplier = 0.5f;
+
+    [Header("Wall Slide State")]
+    public float wallSlideSpeed = 3f;
+
+    [Header("Check Variables")]
+    public float groundCheckRadius = .3f;
+    public float wallCheckDistance = 0.5f;
+    public LayerMask whatIsGround;
 }
