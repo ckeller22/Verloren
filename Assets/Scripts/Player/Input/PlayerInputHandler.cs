@@ -9,6 +9,8 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 RawMovementInput { get; private set; }
 
     public bool JumpInput { get; private set; }
+    public bool GrabInput { get; private set; }
+    public bool DashInput { get; private set; }
     public int NormInputX { get; private set; }
     public int NormInputY { get; private set; }
 
@@ -17,17 +19,40 @@ public class PlayerInputHandler : MonoBehaviour
     private float jumpInputStartTime;
     private float jumpTimer;
     private float jumpDelay = 0.25f;
+    private float dashTimer;
+    private float dashDelay = 0.25f;
     public bool JumpInputStop { get; private set; }
+    public bool DashInputStop { get; private set; }
+
 
     private void Update()
     {
         CheckJumpInputHoldTime();
+        CheckDashInputHoldTime();
     }
     public void OnMoveInput(InputAction.CallbackContext context)
     {
         RawMovementInput = context.ReadValue<Vector2>();
-        NormInputX = (int)(RawMovementInput * Vector2.right).normalized.x;
-        NormInputY = (int)(RawMovementInput * Vector2.up).normalized.y;
+        
+        if (Mathf.Abs(RawMovementInput.x) > 0.5f)
+        {
+            NormInputX = (int)(RawMovementInput * Vector2.right).normalized.x;
+        } 
+        else
+        {
+            NormInputX = 0;
+        }
+
+        if (Mathf.Abs(RawMovementInput.y) > 0.5f)
+        {
+            NormInputY = (int)(RawMovementInput * Vector2.up).normalized.y;
+        }
+        else
+        {
+            NormInputY = 0;
+        }
+
+        
     }
 
     public void OnJumpInput(InputAction.CallbackContext context)
@@ -47,10 +72,45 @@ public class PlayerInputHandler : MonoBehaviour
         }
     }
 
+    public void OnGrabInput(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            GrabInput = true;
+        }
+
+        if (context.canceled)
+        {
+            GrabInput = false;
+        }
+
+        
+    }
+
+    public void OnDashInput(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            DashInput = true;
+            DashInputStop = false;
+            dashTimer = Time.time + dashDelay;
+        }
+
+        if (context.canceled)
+        {
+            DashInputStop = true;
+        }
+    }
+
     public void UseJumpInput()
     {
         
         JumpInput = false;
+    }
+
+    public void UseDashInput()
+    {
+        DashInput = false;
     }
 
     private void CheckJumpInputHoldTime()
@@ -60,6 +120,14 @@ public class PlayerInputHandler : MonoBehaviour
         {
             JumpInput = false;
             
+        }
+    }
+
+    private void CheckDashInputHoldTime()
+    {
+        if (dashTimer > Time.time)
+        {
+            DashInput = false;
         }
     }
 }

@@ -7,6 +7,8 @@ public class PlayerState
     protected Player player;
     protected PlayerData playerData;
     protected PlayerStateMachine stateMachine;
+    protected bool isExitingState;
+    protected float startTime;
     
     
     public PlayerState(Player player, PlayerData playerData, PlayerStateMachine playerStateMachine)
@@ -19,11 +21,14 @@ public class PlayerState
     public virtual void Enter()
     {
         DoChecks();
+
+        startTime = Time.time;
+        isExitingState = false;
     }
 
     public virtual void Exit()
     {
-
+        isExitingState = true;
     }
 
     public virtual void LogicUpdate()

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerMoveState : PlayerGroundedState
 {
+    
     public PlayerMoveState(Player player, PlayerData playerData, PlayerStateMachine playerStateMachine) : base(player, playerData, playerStateMachine)
     {
     }
@@ -11,6 +12,8 @@ public class PlayerMoveState : PlayerGroundedState
     public override void DoChecks()
     {
         base.DoChecks();
+
+        
     }
 
     public override void Enter()
@@ -30,6 +33,8 @@ public class PlayerMoveState : PlayerGroundedState
         player.CheckIfShouldFlip(xInput);
         player.SetVelocityX(xInput * playerData.moveSpeed);
 
+        if (isExitingState) { return; }
+        
         if (xInput == 0)
         {
             stateMachine.ChangeState(player.IdleState);

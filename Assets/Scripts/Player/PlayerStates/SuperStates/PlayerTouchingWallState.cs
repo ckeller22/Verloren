@@ -6,7 +6,13 @@ public class PlayerTouchingWallState : PlayerState
 {
     protected bool isGrounded;
     protected bool isTouchingWall;
+    protected bool isTouchingLedge;
+    protected bool grabInput;
     protected int xInput;
+    protected int yInput;
+    protected bool jumpInput;
+    protected bool dashInput;
+    
 
     public PlayerTouchingWallState(Player player, PlayerData playerData, PlayerStateMachine playerStateMachine) : base(player, playerData, playerStateMachine)
     {
@@ -18,6 +24,12 @@ public class PlayerTouchingWallState : PlayerState
 
         isGrounded = player.CheckIfGrounded();
         isTouchingWall = player.CheckIfTouchingWall();
+        isTouchingLedge = player.CheckIfTouchingLedge();
+
+        if (isTouchingWall && !isTouchingLedge)
+        {
+            player.LedgeClimbState.SetDetectedPosition(player.transform.position);
+        }
     }
 
     public override void Enter()
@@ -35,14 +47,32 @@ public class PlayerTouchingWallState : PlayerState
         base.LogicUpdate();
 
         xInput = player.InputHandler.NormInputX;
+        yInput = player.InputHandler.NormInputY;
+        grabInput = player.InputHandler.GrabInput;
+        jumpInput = player.InputHandler.JumpInput;
+        dashInput = player.InputHandler.DashInput;
 
-        if (isGrounded)
+        if (jumpInput)
+        {
+            
+            player.WallJumpState.DetermineWallJumpDirection(isTouchingWall);
+            stateMachine.ChangeState(player.WallJumpState);
+        }
+        if (dashInput)
+        {
+            stateMachine.ChangeState(player.DashState);
+        }
+        else if (isGrounded && !grabInput)
         {
             stateMachine.ChangeState(player.IdleState);
         }
-        else if(!isTouchingWall || xInput != player.FacingDirection)
+        else if(!isTouchingWall || (xInput != player.FacingDirection && !grabInput))
         {
             stateMachine.ChangeState(player.InAirState);
+        }
+        else if (isTouchingWall && !isTouchingLedge)
+        {
+            stateMachine.ChangeState(player.LedgeClimbState);
         }
     }
 
@@ -50,4 +80,6 @@ public class PlayerTouchingWallState : PlayerState
     {
         base.PhysicsUpdate();
     }
+
+   
 }

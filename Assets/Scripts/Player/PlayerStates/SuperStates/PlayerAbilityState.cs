@@ -5,7 +5,8 @@ using UnityEngine;
 public class PlayerAbilityState : PlayerState
 {
     protected bool isAbilityDone;
-    private bool isGrounded;
+    protected bool isGrounded;
+    
 
     public PlayerAbilityState(Player player, PlayerData playerData, PlayerStateMachine playerStateMachine) : base(player, playerData, playerStateMachine)
     {
@@ -33,6 +34,8 @@ public class PlayerAbilityState : PlayerState
     public override void LogicUpdate()
     {
         base.LogicUpdate();
+
+        
 
         if (isAbilityDone)
         {

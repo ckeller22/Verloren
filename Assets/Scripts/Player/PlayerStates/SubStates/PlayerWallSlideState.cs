@@ -26,8 +26,14 @@ public class PlayerWallSlideState : PlayerTouchingWallState
     public override void LogicUpdate()
     {
         base.LogicUpdate();
-
+        if (isExitingState) { return; }
+        
         player.SetVelocityY(-playerData.wallSlideSpeed);
+
+        if (grabInput && yInput == 0)
+        {
+            stateMachine.ChangeState(player.WallGrabState);
+        }
     }
 
     public override void PhysicsUpdate()
