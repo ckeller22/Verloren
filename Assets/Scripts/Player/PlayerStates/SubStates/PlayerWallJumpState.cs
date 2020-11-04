@@ -22,6 +22,7 @@ public class PlayerWallJumpState : PlayerAbilityState
         player.SetVelocity(playerData.wallJumpSpeed, playerData.wallJumpAngle, wallJumpDirection);
         player.CheckIfShouldFlip(wallJumpDirection);
         player.JumpState.DecreaseAmountOfJumpsLeft();
+        
     }
 
     public override void Exit()
@@ -36,6 +37,7 @@ public class PlayerWallJumpState : PlayerAbilityState
         if (Time.time >= startTime + playerData.wallJumpTime)
         {
             isAbilityDone = true;
+            
         }
     }
 

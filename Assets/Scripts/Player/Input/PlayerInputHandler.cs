@@ -7,7 +7,8 @@ using UnityEngine.InputSystem;
 public class PlayerInputHandler : MonoBehaviour
 {
     public Vector2 RawMovementInput { get; private set; }
-
+    public Vector2 RawDashDirectionInput { get; private set; }
+    public Vector2 DashDirectionInput { get; private set; }
     public bool JumpInput { get; private set; }
     public bool GrabInput { get; private set; }
     public bool DashInput { get; private set; }
@@ -100,6 +101,13 @@ public class PlayerInputHandler : MonoBehaviour
         {
             DashInputStop = true;
         }
+    }
+
+    public void OnDashDirectionInput(InputAction.CallbackContext context)
+    {
+        RawDashDirectionInput = context.ReadValue<Vector2>();
+
+        DashDirectionInput = Vector2Int.RoundToInt(RawDashDirectionInput.normalized);
     }
 
     public void UseJumpInput()

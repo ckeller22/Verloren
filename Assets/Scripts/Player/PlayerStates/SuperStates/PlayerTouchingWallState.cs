@@ -56,6 +56,7 @@ public class PlayerTouchingWallState : PlayerState
         {
             
             player.WallJumpState.DetermineWallJumpDirection(isTouchingWall);
+
             stateMachine.ChangeState(player.WallJumpState);
         }
         if (dashInput)
@@ -74,6 +75,7 @@ public class PlayerTouchingWallState : PlayerState
         {
             stateMachine.ChangeState(player.LedgeClimbState);
         }
+        
     }
 
     public override void PhysicsUpdate()

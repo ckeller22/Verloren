@@ -5925,6 +5925,21 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 312fca35-55f7-46f6-b4c2-6492c020b3ee
     m_ActionName: Gameplay/Dash[/Keyboard/shift,/XInputControllerWindows/rightTrigger,/XInputControllerWindows/buttonWest]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1501503501}
+        m_MethodName: OnDashDirectionInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 3b8630fa-414f-41a5-83b8-35f89e560cc5
+    m_ActionName: Gameplay/DashDirection[/XInputControllerWindows/leftStick]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Gameplay

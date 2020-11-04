@@ -8,6 +8,8 @@ public class PlayerDashState : PlayerAbilityState
     private float lastDashTime;
     private bool isHolding;
     private Vector2 dashDirection;
+    private Vector2 dashDirectionInput;
+    private bool isDashVelocitySet;
     protected int xInput;
     protected int yInput;
 
@@ -24,17 +26,19 @@ public class PlayerDashState : PlayerAbilityState
     {
         base.Enter();
 
+        isDashVelocitySet = false;
         CanDash = false;
         player.InputHandler.UseDashInput();
+        dashDirectionInput = player.InputHandler.DashDirectionInput;
 
-        
+
     }
 
     public override void Exit()
     {
         base.Exit();
-
-        if(player.CurrentVelocity.y > 0)
+        
+        if(player.CurrentVelocity.y >= 0)
         {
             player.SetVelocityY(player.CurrentVelocity.y * playerData.dashEndYMultipler);
         }
@@ -46,19 +50,29 @@ public class PlayerDashState : PlayerAbilityState
 
         if (isExitingState) { return; }
 
-        xInput = player.InputHandler.NormInputX;
-        yInput = player.InputHandler.NormInputY;
+        
 
-        if (xInput == 0 || yInput == 0)
+        //if (!isDashVelocitySet)
+        //{
+            
+        //    isDashVelocitySet = true;
+        //}
+
+        if (dashDirectionInput == Vector2.zero)
         {
             dashDirection = Vector2.right * player.FacingDirection;
+            dashDirection.Normalize();
+
         }
         else
         {
-            dashDirection.Set(xInput, yInput);
+            dashDirection.Set(dashDirectionInput.x, dashDirectionInput.y);
+
         }
         player.RB.drag = playerData.drag;
         player.SetVelocity(playerData.dashSpeed, dashDirection);
+
+
         if (Time.time >= startTime + playerData.dashTime)
         {
             player.RB.drag = 0f;
